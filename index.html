@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vika, 1869</title>
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:       #1a1209;
+      --paper:     #c8b89a;
+      --paper-dark:#a8976e;
+      --blood:     #6b1a1a;
+      --fade:      #4a3728;
+      --grain:     rgba(0,0,0,0.04);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #0d0a06;
+      overflow: hidden;
+    }
+
+    /* ── GRAIN OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 100;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+      opacity: 0.4;
+    }
+
+    /* ── LANTERN GLOW ── */
+    #lantern {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse 55% 65% at 50% 42%,
+        rgba(180,130,60,0.18) 0%,
+        rgba(120,80,30,0.08) 45%,
+        transparent 70%);
+      animation: flicker 6s ease-in-out infinite;
+      pointer-events: none; z-index: 0;
+    }
+    @keyframes flicker {
+      0%,100% { opacity: 1; transform: scale(1); }
+      20%      { opacity: 0.92; transform: scale(1.005); }
+      50%      { opacity: 0.97; transform: scale(0.998); }
+      75%      { opacity: 0.88; transform: scale(1.003); }
+    }
+
+    /* ── SCENE ── */
+    #scene {
+      position: fixed; inset: 0; z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2rem;
+    }
+
+    /* ── MAP / PAPER ── */
+    #paper {
+      position: relative;
+      width: min(420px, 92vw);
+      background: var(--paper);
+      border-radius: 2px;
+      padding: 2.4rem 2.2rem 2rem;
+      box-shadow:
+        0 0 0 1px rgba(80,50,20,0.3),
+        0 0 40px rgba(0,0,0,0.7),
+        inset 0 0 60px rgba(100,70,30,0.15);
+      opacity: 0;
+      transform: translateY(18px);
+      animation: riseIn 1.8s cubic-bezier(.22,.8,.36,1) 0.6s forwards;
+    }
+    @keyframes riseIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Paper texture lines */
+    #paper::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        transparent,
+        transparent 27px,
+        rgba(100,70,30,0.12) 28px
+      );
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    /* Stain */
+    #paper::after {
+      content: '';
+      position: absolute;
+      bottom: 1.5rem; right: 1.8rem;
+      width: 60px; height: 40px;
+      background: radial-gradient(ellipse, rgba(80,40,10,0.18), transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* ── HEADER ── */
+    .dateline {
+      font-family: 'IM Fell English SC', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      color: var(--fade);
+      text-align: center;
+      margin-bottom: 1.4rem;
+      opacity: 0;
+      animation: fadeUp 1s ease 1.6s forwards;
+    }
+
+    /* ── MAP AREA ── */
+    #map-area {
+      position: relative;
+      width: 100%;
+      height: 180px;
+      margin-bottom: 1.6rem;
+      opacity: 0;
+      animation: fadeUp 1s ease 2s forwards;
+    }
+
+    #map-svg {
+      width: 100%; height: 100%;
+    }
+
+    /* Pulsing dot */
+    .pulse-ring {
+      animation: pulseRing 2.4s ease-out infinite;
+      transform-origin: center;
+    }
+    .pulse-dot {
+      animation: pulseDot 2.4s ease-out infinite;
+    }
+    @keyframes pulseRing {
+      0%   { r: 6; opacity: 0.8; }
+      80%  { r: 18; opacity: 0; }
+      100% { r: 18; opacity: 0; }
+    }
+    @keyframes pulseDot {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.7; }
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--paper-dark), transparent);
+      margin-bottom: 1.4rem;
+      opacity: 0;
+      animation: fadeUp 1s ease 2.4s forwards;
+    }
+
+    /* ── GIRL SECTION ── */
+    #girl-section {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      opacity: 0;
+      animation: fadeUp 1.2s ease 3s forwards;
+    }
+
+    /* Silhouette */
+    #girl-silhouette {
+      flex-shrink: 0;
+      width: 52px;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    }
+
+    /* Speech bubble */
+    #speech {
+      position: relative;
+      background: rgba(180,150,100,0.25);
+      border: 1px solid rgba(100,70,30,0.3);
+      border-radius: 2px;
+      padding: 0.9rem 1rem;
+      flex: 1;
+    }
+    #speech::before {
+      content: '';
+      position: absolute;
+      left: -8px; top: 14px;
+      border: 4px solid transparent;
+      border-right-color: rgba(100,70,30,0.3);
+    }
+
+    #speech p {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--ink);
+    }
+
+    #speech .speaker {
+      display: block;
+      margin-top: 0.6rem;
+      font-family: 'IM Fell English SC', serif;
+      font-style: normal;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--fade);
+      text-align: right;
+    }
+
+    /* ── FOOTER ── */
+    .footer-line {
+      margin-top: 1.6rem;
+      text-align: center;
+      font-family: 'IM Fell English SC', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: var(--fade);
+      opacity: 0;
+      animation: fadeUp 1s ease 4.2s forwards;
+    }
+
+    /* ── VIGNETTE ── */
+    #vignette {
+      position: fixed; inset: 0; z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(ellipse 80% 80% at 50% 50%,
+        transparent 30%, rgba(0,0,0,0.65) 100%);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── SOUND INDICATOR ── */
+    #sound-btn {
+      position: fixed;
+      bottom: 1.4rem; right: 1.4rem;
+      z-index: 10;
+      background: none; border: 1px solid rgba(180,140,80,0.4);
+      color: rgba(180,140,80,0.7);
+      font-family: 'IM Fell English SC', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      padding: 0.4rem 0.7rem;
+      cursor: pointer;
+      opacity: 0;
+      animation: fadeUp 1s ease 5s forwards;
+      transition: all 0.3s;
+    }
+    #sound-btn:hover { background: rgba(180,140,80,0.1); }
+  </style>
+</head>
+<body>
+
+<div id="lantern"></div>
+<div id="vignette"></div>
+
+<div id="scene">
+  <div id="paper">
+
+    <div class="dateline">Vika, Falu Kommun &nbsp;·&nbsp; Anno Domini 1869</div>
+
+    <!-- MAP -->
+    <div id="map-area">
+      <svg id="map-svg" viewBox="0 0 380 180" xmlns="http://www.w3.org/2000/svg">
+        <!-- Background wash -->
+        <rect width="380" height="180" fill="rgba(140,110,60,0.08)" rx="1"/>
+
+        <!-- Stylised terrain lines -->
+        <g stroke="rgba(80,55,25,0.18)" stroke-width="0.8" fill="none">
+          <path d="M0,140 Q60,120 120,135 Q180,150 240,130 Q300,110 380,125"/>
+          <path d="M0,155 Q80,138 160,148 Q240,158 380,142"/>
+          <path d="M20,100 Q70,88 130,95 Q190,102 250,90 Q310,78 380,88"/>
+          <path d="M0,70  Q50,60 100,68 Q160,77 220,62 Q280,47 380,58"/>
+          <path d="M0,40  Q40,30 90,38 Q150,47 200,35 Q270,20 380,30"/>
+        </g>
+
+        <!-- River -->
+        <path d="M30,10 Q80,40 60,80 Q40,120 90,155 Q120,175 150,178"
+              stroke="rgba(60,90,120,0.35)" stroke-width="2.5" fill="none"
+              stroke-linecap="round"/>
+
+        <!-- Roads -->
+        <g stroke="rgba(80,55,25,0.25)" stroke-width="1" fill="none" stroke-dasharray="4,3">
+          <path d="M0,95 Q90,90 160,98 Q220,105 280,92 Q330,82 380,86"/>
+          <path d="M155,0 Q162,50 160,98 Q158,140 155,180"/>
+        </g>
+
+        <!-- Forest marks -->
+        <g fill="rgba(60,80,40,0.2)" stroke="none">
+          <circle cx="300" cy="50"  r="5"/>
+          <circle cx="312" cy="44" r="4"/>
+          <circle cx="308" cy="58" r="3.5"/>
+          <circle cx="322" cy="52" r="4.5"/>
+          <circle cx="295" cy="40" r="3"/>
+          <circle cx="60"  cy="40" r="4"/>
+          <circle cx="72"  cy="34" r="3.5"/>
+          <circle cx="68"  cy="48" r="4"/>
+          <circle cx="50"  cy="46" r="3"/>
+        </g>
+
+        <!-- Vika label -->
+        <text x="162" y="88" font-family="'IM Fell English SC', serif"
+              font-size="8" fill="rgba(60,35,10,0.55)" letter-spacing="1">Vika</text>
+
+        <!-- Pulse marker at Vika crossroads -->
+        <circle class="pulse-ring" cx="160" cy="98" r="6"
+                fill="none" stroke="#6b1a1a" stroke-width="1.5"/>
+        <circle class="pulse-dot" cx="160" cy="98" r="4"
+                fill="#6b1a1a" stroke="#4a1010" stroke-width="0.5"/>
+
+        <!-- Compass rose -->
+        <g transform="translate(344,22)" fill="rgba(80,55,25,0.4)"
+           font-family="'IM Fell English SC',serif" font-size="5.5">
+          <text x="-3" y="-8">N</text>
+          <line x1="0" y1="-6" x2="0" y2="6" stroke="rgba(80,55,25,0.4)" stroke-width="0.8"/>
+          <line x1="-6" y1="0" x2="6" y2="0" stroke="rgba(80,55,25,0.4)" stroke-width="0.8"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- GIRL + SPEECH -->
+    <div id="girl-section">
+
+      <!-- SVG silhouette of a girl in period dress -->
+      <svg id="girl-silhouette" viewBox="0 0 52 110" xmlns="http://www.w3.org/2000/svg">
+        <!-- Head -->
+        <ellipse cx="26" cy="12" rx="9" ry="10" fill="#2a1a0a"/>
+        <!-- Hair bun -->
+        <ellipse cx="26" cy="5"  rx="6" ry="4"  fill="#1a0f05"/>
+        <circle  cx="33" cy="6" r="3"           fill="#1a0f05"/>
+        <!-- Neck -->
+        <rect x="23" y="21" width="6" height="6" rx="1" fill="#2a1a0a"/>
+        <!-- Collar -->
+        <path d="M18,27 L26,24 L34,27 L34,30 L18,30 Z" fill="#1a1209"/>
+        <!-- Dress body -->
+        <path d="M18,27 Q14,50 12,75 Q10,90 14,105 L38,105 Q42,90 40,75 Q38,50 34,27 Z"
+              fill="#1a1209"/>
+        <!-- Apron -->
+        <path d="M20,32 Q26,35 32,32 L34,70 Q26,74 18,70 Z"
+              fill="rgba(180,160,120,0.25)"/>
+        <!-- Arms -->
+        <path d="M18,30 Q8,45 10,60" stroke="#1a1209" stroke-width="7"
+              stroke-linecap="round" fill="none"/>
+        <path d="M34,30 Q44,45 42,60" stroke="#1a1209" stroke-width="7"
+              stroke-linecap="round" fill="none"/>
+        <!-- Hands -->
+        <ellipse cx="10" cy="62" rx="4" ry="3" fill="#2a1a0a"/>
+        <ellipse cx="42" cy="62" rx="4" ry="3" fill="#2a1a0a"/>
+        <!-- Milk can in left hand -->
+        <rect x="3" y="60" width="9" height="13" rx="2"
+              fill="rgba(80,70,50,0.6)" stroke="rgba(60,50,30,0.8)" stroke-width="0.5"/>
+        <rect x="4" y="58" width="7" height="3" rx="1" fill="rgba(80,70,50,0.5)"/>
+        <!-- Feet -->
+        <ellipse cx="20" cy="106" rx="6" ry="3" fill="#0f0905"/>
+        <ellipse cx="32" cy="106" rx="6" ry="3" fill="#0f0905"/>
+      </svg>
+
+      <div id="speech">
+        <p id="typewriter"></p>
+        <span class="speaker">— Britta, 11 år &nbsp;·&nbsp; Vika 1869</span>
+      </div>
+    </div>
+
+    <div class="footer-line">Utredningen pågår &nbsp;·&nbsp; Vad vet du?</div>
+
+  </div><!-- /paper -->
+</div><!-- /scene -->
+
+<button id="sound-btn" onclick="toggleSound()">♪ &nbsp;Ljud</button>
+
+<script>
+  // ── TYPEWRITER ──
+  const text = "Det är konstigt... jag hittade något i hans mjölkkanna. Små korn, som grus. Kan det vara det som gör honom sjuk?";
+  const el   = document.getElementById('typewriter');
+  let i = 0;
+
+  function type() {
+    if (i < text.length) {
+      el.textContent += text[i++];
+      setTimeout(type, i < 4 ? 80 : 38 + Math.random() * 30);
+    }
+  }
+  setTimeout(type, 3400);
+
+  // ── AMBIENT SOUND ──
+  let ctx, playing = false, gainNode, bufferSource;
+
+  async function toggleSound() {
+    const btn = document.getElementById('sound-btn');
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      gainNode = ctx.createGain();
+      gainNode.gain.setValueAtTime(0.18, ctx.currentTime);
+      gainNode.connect(ctx.destination);
+    }
+    if (playing) {
+      gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 1);
+      setTimeout(() => { if (bufferSource) bufferSource.stop(); }, 1100);
+      playing = false;
+      btn.textContent = '♪  Ljud';
+    } else {
+      // Generate atmospheric wind/fire noise procedurally
+      const bufLen = ctx.sampleRate * 4;
+      const buffer = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+      const data   = buffer.getChannelData(0);
+      for (let n = 0; n < bufLen; n++) data[n] = (Math.random() * 2 - 1);
+
+      bufferSource = ctx.createBufferSource();
+      bufferSource.buffer = buffer;
+      bufferSource.loop = true;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 280;
+      filter.Q.value = 0.8;
+
+      bufferSource.connect(filter);
+      filter.connect(gainNode);
+      gainNode.gain.setValueAtTime(0, ctx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 1.5);
+      bufferSource.start();
+      playing = true;
+      btn.textContent = '♪  Tyst';
+    }
+  }
+</script>
+
+</body>
+</html>
